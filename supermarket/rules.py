@@ -1,14 +1,12 @@
 from functools import partial
 from .item import DiscountedItem
 
-def three_for_two(item):
-  return partial(do_three_for_two, item)
+def three_for_two(item_to_discount):
+  return partial(do_three_for_two, item_to_discount)
     
-def do_three_for_two(item, basket):
-  print(basket)
-  full_price, discounted = basket
-  matching_items = [i for i in full_price if i.name == item]
-  non_matching_items = [i for i in full_price if i.name != item]
+def do_three_for_two(item_to_discount, full_price, discounted):
+  matching_items = [i for i in full_price if i.name == item_to_discount]
+  non_matching_items = [i for i in full_price if i.name != item_to_discount]
   (discount_count, spare) = divmod(len(matching_items), 3)
   new_discounts = [DiscountedItem(matching_items[0].name,
                                   matching_items[0].price, 
