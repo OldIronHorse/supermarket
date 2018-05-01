@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 from supermarket import make_receipt, PricedItem, Receipt, three_for_two, \
-  DiscountedItem, price_items
+  DiscountedItem, price_items, two_for
 
 class TestPriceItems(TestCase):
   def setUp(self):
@@ -109,6 +109,19 @@ class TestRule3For2(TestCase):
                              DiscountedItem('soap', 1.5, 0.0)]),
                      sorted(discounted))
 
+  def test_simplest_preserve_discounts(self):
+    basket = [PricedItem('soap', 1.5), 
+              PricedItem('soap', 1.5), 
+              PricedItem('soap', 1.5)]
+    already_discounted = [DiscountedItem('cheese', 1.0, 0.75)]
+    full_price, discounted = three_for_two('soap')(basket, already_discounted)
+    self.assertFalse(full_price)
+    self.assertEqual(sorted([PricedItem('soap', 1.5), 
+                             PricedItem('soap', 1.5), 
+                             DiscountedItem('cheese', 1.0, 0.75),
+                             DiscountedItem('soap', 1.5, 0.0)]),
+                     sorted(discounted))
+
   def test_1_and_a_bit_matches(self):
     basket = [PricedItem('soap', 1.5), 
               PricedItem('shampoo', 2.0),
@@ -129,6 +142,27 @@ class TestRule3For2(TestCase):
                              PricedItem('shampoo', 2.0),
                              PricedItem('shampoo', 2.0)]),
                      sorted(discounted))
+
+class Test2For(TestCase):
+  def test_not_triggered_preserve_discounts(self):
+    basket = [PricedItem('soap', 1.5),
+              PricedItem('shampoo', 2.0),
+              PricedItem('shampoo', 2.0),
+              PricedItem('toothpaste', 0.8)]
+    already_discounted = [DiscountedItem('cheese', 1.0, 0.75)]
+    full_price, discounted = two_for('soap', 2.0)(basket, already_discounted)
+    self.assertEqual(discounted, already_discounted)
+    self.assertEqual(sorted(basket), sorted(full_price))
+
+  def test_simplest(self):
+    basket = [PricedItem('soap', 1.5),
+              PricedItem('soap', 1.5)]
+    full_price, discounted = two_for('soap', 2.0)(basket, [])
+    self.assertFalse(full_price)
+    self.assertEqual(sorted([DiscountedItem('soap', 1.5, 2.0),
+                             DiscountedItem('soap', 1.5, 0)]),
+                     sorted(discounted))
+    
 
 if __name__ == '__main__':
   main()
