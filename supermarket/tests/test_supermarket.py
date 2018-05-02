@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 from supermarket import make_receipt, PricedItem, Receipt, three_for_two, \
-  DiscountedItem, price_items, two_for, MultiBuy
+  DiscountedItem, price_items, two_for, MultiBuy, cheapest_free
 
 class TestPriceItems(TestCase):
   def setUp(self):
@@ -52,7 +52,11 @@ class TestMakeReceipt(TestCase):
                              PricedItem('shampoo', 2.0),
                              PricedItem('soap', 1.5),
                              PricedItem('toothpaste', 0.8),
-                             MultiBuy('shampoo', 3, 2.0, 2.0, 4.0)]),
+                             MultiBuy('3 for 2',
+                                      [PricedItem('shampoo', 2.0),
+                                       PricedItem('shampoo', 2.0),
+                                       PricedItem('shampoo', 2.0)],
+                                      2.0, 4.0)]),
                      sorted(receipt.items))
 
   def test_multiple_rules(self):
@@ -69,8 +73,15 @@ class TestMakeReceipt(TestCase):
     self.assertEqual(sorted([PricedItem('shampoo', 2.0),
                              PricedItem('shampoo', 2.0),
                              PricedItem('toothpaste', 0.8),
-                             MultiBuy('soap', 2, 1.5, 1.0, 2.0),
-                             MultiBuy('shampoo', 3, 2.0, 2.0, 4.0)]),
+                             MultiBuy('2 for',
+                                      [PricedItem('soap', 1.5), 
+                                       PricedItem('soap', 1.5)],
+                                      1.0, 2.0),
+                             MultiBuy('3 for 2',
+                                      [PricedItem('shampoo', 2.0),
+                                       PricedItem('shampoo', 2.0),
+                                       PricedItem('shampoo', 2.0)],
+                                      2.0, 4.0)]),
                      sorted(receipt.items))
     self.assertEqual(10.8, receipt.total)
 
@@ -121,7 +132,11 @@ class TestRule3For2(TestCase):
               PricedItem('soap', 1.5)]
     full_price, discounted = three_for_two('soap')(basket, [])
     self.assertFalse(full_price)
-    self.assertEqual(sorted([MultiBuy('soap', 3, 1.5, 1.5, 3.0)]),
+    self.assertEqual(sorted([MultiBuy('3 for 2', 
+                                      [PricedItem('soap', 1.5),
+                                       PricedItem('soap', 1.5),
+                                       PricedItem('soap', 1.5)],
+                                      1.5, 3.0)]),
                      sorted(discounted))
 
   def test_simplest_preserve_discounts(self):
@@ -132,7 +147,10 @@ class TestRule3For2(TestCase):
     full_price, discounted = three_for_two('soap')(basket, already_discounted)
     self.assertFalse(full_price)
     self.assertEqual(sorted([DiscountedItem('cheese', 1.0, 0.25, 0.75),
-                             MultiBuy('soap', 3, 1.5, 1.5, 3.0)]),
+                             MultiBuy('3 for 2',
+                                      [PricedItem('soap', 1.5), 
+                                       PricedItem('soap', 1.5), 
+                                       PricedItem('soap', 1.5)], 1.5, 3.0)]),
                      sorted(discounted))
 
   def test_1_and_a_bit_matches(self):
@@ -151,7 +169,11 @@ class TestRule3For2(TestCase):
                              PricedItem('shampoo', 2.0),
                              PricedItem('shampoo', 2.0)]),
                      sorted(full_price))
-    self.assertEqual(sorted([MultiBuy('shampoo', 3, 2.0, 2.0, 4.0)]),
+    self.assertEqual(sorted([MultiBuy('3 for 2', 
+                                      [PricedItem('shampoo', 2.0),
+                                       PricedItem('shampoo', 2.0),
+                                       PricedItem('shampoo', 2.0)],
+                                      2.0, 4.0)]),
                      sorted(discounted))
 
 class Test2For(TestCase):
@@ -170,9 +192,44 @@ class Test2For(TestCase):
               PricedItem('soap', 1.5)]
     full_price, discounted = two_for('soap', 2.0)(basket, [])
     self.assertFalse(full_price)
-    self.assertEqual(sorted([MultiBuy('soap', 2, 1.5, 1.0, 2.0)]),
+    self.assertEqual(sorted([MultiBuy('2 for',
+                                      [PricedItem('soap', 1.5),
+                                       PricedItem('soap', 1.5)],
+                                      1.0, 2.0)]),
                      sorted(discounted))
     
+
+class TestCheapestFree(TestCase):
+  def test_not_triggered_preserve_discounts(self):
+    basket = [PricedItem('soap', 1.5),
+              PricedItem('shampoo', 2.0),
+              PricedItem('shampoo', 2.0),
+              PricedItem('toothpaste', 0.8)]
+    already_discounted = [DiscountedItem('cheese', 1.0, 0.25, 0.75)]
+    full_price, discounted = \
+        cheapest_free(['soap', 'toothpaste', 'conditioner'], 3)(basket, already_discounted)
+    self.assertEqual(discounted, already_discounted)
+    self.assertEqual(sorted(basket), sorted(full_price))
+
+  def test_simplest_3(self):
+    basket = [PricedItem('soap', 1.5),
+              PricedItem('shampoo', 2.0),
+              PricedItem('shampoo', 2.0),
+              PricedItem('toothpaste', 0.8)]
+    already_discounted = [DiscountedItem('cheese', 1.0, 0.25, 0.75)]
+    full_price, discounted = \
+        cheapest_free(['soap', 'shampoo', 'toothpaste'], 3)(basket, already_discounted)
+    self.assertEqual(sorted(discounted), 
+                     sorted([DiscountedItem('cheese', 1.0, 0.25, 0.75),
+                             MultiBuy('cheapest free',
+                                      [PricedItem('shampoo', 2.0),
+                                       PricedItem('shampoo', 2.0),
+                                       PricedItem('toothpaste', 0.8)],
+                                       0.8,
+                                       4.0)]))
+    self.assertEqual([PricedItem('soap', 1.5)], full_price)
+    
+
 
 if __name__ == '__main__':
   main()

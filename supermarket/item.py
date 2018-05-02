@@ -4,4 +4,4 @@ from collections import namedtuple
 
 PricedItem = namedtuple('PricedItem', 'name price')
 DiscountedItem = namedtuple('DiscountedItem', 'name full_price saving price')
-MultiBuy = namedtuple('MultiBuy', 'name quantity unit_price saving price')
+MultiBuy = namedtuple('MultiBuy', 'type items saving price')
