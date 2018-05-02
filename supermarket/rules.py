@@ -1,6 +1,31 @@
 from functools import partial, reduce
 from .item import MultiBuy
 
+def freebies(paid_item_name, paid_item_count, free_item_name, free_item_count):
+  return partial(do_freebies, paid_item_name, paid_item_count, free_item_name,
+                 free_item_count)
+
+def do_freebies(paid_item_name, paid_item_count, free_item_name, free_item_count,
+                full_price_items, discounted_items):
+  paid_items = [item for item in full_price_items
+                if item.name == paid_item_name]
+  free_items = [item for item in full_price_items
+                if item.name == free_item_name]
+  other_items = [item for item in full_price_items 
+                 if item.name not in [free_item_name, paid_item_name]]
+  while free_items and len(paid_items) >= paid_item_count:
+    paid = paid_items[:paid_item_count] 
+    free = free_items[:free_item_count]
+    paid_items = paid_items[paid_item_count:]
+    free_items = free_items[free_item_count:]
+    discounted_items = discounted_items + [MultiBuy('freebies',
+                                                    paid + free,
+                                                    reduce(lambda total, i: total + i.price,
+                                                           free, 0),
+                                                    reduce(lambda total, i: total + i.price,
+                                                           paid, 0))]
+  return (other_items + paid_items + free_items, discounted_items)
+
 def cheapest_free(eligible_item_names, required_count):
   return partial(do_cheapest_free, eligible_item_names, required_count)
 
@@ -12,7 +37,7 @@ def do_cheapest_free(eligible_item_names, required_count, full_price_items,
                           reverse=True)
   ineligible_items = [item for item in full_price_items 
                       if item.name not in eligible_item_names]
-  while(len(eligible_items) >= required_count):
+  while len(eligible_items) >= required_count:
     pay_for = eligible_items[:required_count - 1]
     get_free = eligible_items[-1]
     discounted_items = discounted_items + [MultiBuy('cheapest free', 

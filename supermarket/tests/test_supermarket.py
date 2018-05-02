@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 from supermarket import make_receipt, PricedItem, Receipt, three_for_two, \
-  DiscountedItem, price_items, two_for, MultiBuy, cheapest_free
+  DiscountedItem, price_items, two_for, MultiBuy, cheapest_free, freebies
 
 class TestPriceItems(TestCase):
   def setUp(self):
@@ -228,8 +228,82 @@ class TestCheapestFree(TestCase):
                                        0.8,
                                        4.0)]))
     self.assertEqual([PricedItem('soap', 1.5)], full_price)
-    
 
+
+class TestFreebies(TestCase):
+  def test_not_triggered_preserve_discounts(self):
+    basket = [PricedItem('soap', 1.5),
+              PricedItem('shampoo', 2.0),
+              PricedItem('shampoo', 2.0),
+              PricedItem('toothpaste', 0.8)]
+    already_discounted = [DiscountedItem('cheese', 1.0, 0.25, 0.75)]
+    full_price, discounted = \
+        freebies('conditioner', 3, 'shampoo', 2)(basket, already_discounted)
+    self.assertEqual(discounted, already_discounted)
+    self.assertEqual(sorted(basket), sorted(full_price))
+
+  def test_triggered_not_fullfilled(self):
+    basket = [PricedItem('soap', 1.5),
+              PricedItem('conditioner', 2.5),
+              PricedItem('conditioner', 2.5),
+              PricedItem('conditioner', 2.5),
+              PricedItem('toothpaste', 0.8)]
+    already_discounted = [DiscountedItem('cheese', 1.0, 0.25, 0.75)]
+    full_price, discounted = \
+        freebies('conditioner', 3, 'shampoo', 2)(basket, already_discounted)
+    self.assertEqual(discounted, already_discounted)
+    self.assertEqual(sorted(basket), sorted(full_price))
+
+  def test_triggered_partially_fullfilled(self):
+    basket = [PricedItem('soap', 1.5),
+              PricedItem('conditioner', 2.5),
+              PricedItem('conditioner', 2.5),
+              PricedItem('shampoo', 2.0),
+              PricedItem('conditioner', 2.5),
+              PricedItem('toothpaste', 0.8)]
+    already_discounted = [DiscountedItem('cheese', 1.0, 0.25, 0.75)]
+    full_price, discounted = \
+        freebies('conditioner', 3, 'shampoo', 2)(basket, already_discounted)
+    self.assertEqual(sorted(already_discounted +
+                            [MultiBuy('freebies',
+                                      [PricedItem('conditioner', 2.5),
+                                       PricedItem('conditioner', 2.5),
+                                       PricedItem('conditioner', 2.5),
+                                       PricedItem('shampoo', 2.0)],
+                                      2.0,
+                                      7.5)]),
+                     sorted(discounted)) 
+    self.assertEqual(sorted([PricedItem('soap', 1.5),
+                             PricedItem('toothpaste', 0.8)]),
+                     sorted(full_price))
+
+  def test_triggered_fullfilled(self):
+    basket = [PricedItem('soap', 1.5),
+              PricedItem('shampoo', 2.0),
+              PricedItem('conditioner', 2.5),
+              PricedItem('conditioner', 2.5),
+              PricedItem('shampoo', 2.0),
+              PricedItem('conditioner', 2.5),
+              PricedItem('shampoo', 2.0),
+              PricedItem('toothpaste', 0.8)]
+    already_discounted = [DiscountedItem('cheese', 1.0, 0.25, 0.75)]
+    full_price, discounted = \
+        freebies('conditioner', 3, 'shampoo', 2)(basket, already_discounted)
+    self.assertEqual(sorted(discounted), 
+                     sorted(already_discounted +
+                            [MultiBuy('freebies',
+                                      [PricedItem('conditioner', 2.5),
+                                       PricedItem('conditioner', 2.5),
+                                       PricedItem('conditioner', 2.5),
+                                       PricedItem('shampoo', 2.0),
+                                       PricedItem('shampoo', 2.0)],
+                                      4.0,
+                                      7.5)]))
+    self.assertEqual(sorted([PricedItem('soap', 1.5),
+                             PricedItem('shampoo', 2.0),
+                             PricedItem('toothpaste', 0.8)]),
+                    sorted(full_price))
+    
 
 if __name__ == '__main__':
   main()
