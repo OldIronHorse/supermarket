@@ -54,7 +54,25 @@ class TestMakeReceipt(TestCase):
                              PricedItem('toothpaste', 0.8),
                              MultiBuy('shampoo', 3, 2.0, 2.0, 4.0)]),
                      sorted(receipt.items))
-  #TODO: Multiple rules
+
+  def test_multiple_rules(self):
+    basket = ['soap',
+              'shampoo',
+              'shampoo',
+              'soap',
+              'shampoo',
+              'toothpaste',
+              'shampoo',
+              'shampoo']
+    receipt = make_receipt(basket, self.prices, [three_for_two('shampoo'),
+                                                 two_for('soap', 2.0)])
+    self.assertEqual(sorted([PricedItem('shampoo', 2.0),
+                             PricedItem('shampoo', 2.0),
+                             PricedItem('toothpaste', 0.8),
+                             MultiBuy('soap', 2, 1.5, 1.0, 2.0),
+                             MultiBuy('shampoo', 3, 2.0, 2.0, 4.0)]),
+                     sorted(receipt.items))
+    self.assertEqual(10.8, receipt.total)
 
 
 class TestRule3For2(TestCase):
