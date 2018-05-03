@@ -1,11 +1,18 @@
 from collections import namedtuple
 from functools import reduce
-from .item import PricedItem
+from .item import PricedItem, PricedWeighedItem
 
 Receipt = namedtuple('Receipt', 'items total')
 
 def price_items(basket, prices):
-  return [PricedItem(item, prices[item]) for item in basket]
+  return [price_item(item, prices) for item in basket]
+
+def price_item(item, prices):
+  try:
+    return PricedItem(item, prices[item])
+  except KeyError:
+    per_kg = prices[item.name]
+    return PricedWeighedItem(item.name, item.weight, per_kg, per_kg * item.weight)
 
 def make_receipt(basket, prices, rules=[]):
   priced = price_items(basket, prices)

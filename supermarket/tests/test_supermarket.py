@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 from supermarket import make_receipt, PricedItem, Receipt, three_for_two, \
-  DiscountedItem, price_items, two_for, MultiBuy, cheapest_free, freebies
+  DiscountedItem, price_items, two_for, MultiBuy, cheapest_free, freebies, \
+  WeighedItem, PricedWeighedItem
 
 class TestPriceItems(TestCase):
   def setUp(self):
@@ -8,6 +9,7 @@ class TestPriceItems(TestCase):
      'soap': 1.5,
      'shampoo': 2.0,
      'toothpaste': 0.8,
+     'bananna': 0.8,
     }
 
   def test_prices_for_all_items(self):
@@ -17,6 +19,10 @@ class TestPriceItems(TestCase):
                       PricedItem('toothpaste', 0.8)],
                      list(price_items(basket, self.prices)))
     
+  def test_weighed_item(self):
+    basket = [WeighedItem('bananna', 0.454)]
+    self.assertEqual([PricedWeighedItem('bananna', 0.454, 0.8, 0.3632)],
+                     list(price_items(basket, self.prices)))
   
 
 class TestMakeReceipt(TestCase):
