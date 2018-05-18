@@ -12,7 +12,7 @@ def price_item(item, prices):
     return PricedItem(item, prices[item])
   except KeyError:
     per_kg = prices[item.name]
-    return PricedWeighedItem(item.name, item.weight, per_kg, per_kg * item.weight)
+    return PricedWeighedItem(item.name, item.weight, per_kg, int(round(per_kg * item.weight)))
 
 def make_receipt(basket, prices, rules=[]):
   priced = price_items(basket, prices)

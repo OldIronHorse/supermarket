@@ -1,6 +1,27 @@
 from functools import partial, reduce
 from .item import MultiBuy
 
+def spend_x_on_y_get_zpc_off(eligible_item_names, required_spend, discount):
+    return partial(do_spend_x_on_y_get_zpc_off, eligible_item_names,
+                   required_spend, discount)
+
+def do_spend_x_on_y_get_zpc_off(eligible_item_names, required_spend, discount,
+                               full_price_items, discounted_items):
+    eligible_items = [item for item in full_price_items
+                       if item.name in eligible_item_names]
+    ineligilble_items = [item for item in full_price_items
+                         if item.name not in eligible_item_names]
+    eligible_spend = reduce(lambda total, i: total + i.price, eligible_items, 0)
+    if eligible_spend < required_spend:
+        return (full_price_items, discounted_items)
+    else:
+        return (ineligilble_items,
+                discounted_items +
+                [MultiBuy('spend X on Y get Z% off',
+                          sorted(eligible_items),
+                          eligible_spend * discount,
+                          eligible_spend * (1 - discount))])
+
 def freebies(paid_item_name, paid_item_count, free_item_name, free_item_count):
   return partial(do_freebies, paid_item_name, paid_item_count, free_item_name,
                  free_item_count)

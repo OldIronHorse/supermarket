@@ -10,4 +10,6 @@ buy 2 (equal) items for a special price
 buy 3 (from a set of items) and the cheapest is free
 for each N items of X, you get K items of Y free
 
+spend X on items from set Y, get Z% off items in set Y
+
 Output as a receipt with the actual price of every item and the grand total.
