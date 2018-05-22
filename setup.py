@@ -16,6 +16,6 @@ setup(name='supermarket',
       license='GPL3',
       packages=['supermarket'],
       test_suite='nose.collector',
-      tests_require=['nose'],
+      tests_require=['nose', 'nosy'],
       include_package_data=True,
       zip_safe=False)
