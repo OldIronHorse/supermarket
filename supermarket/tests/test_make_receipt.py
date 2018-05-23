@@ -16,6 +16,7 @@ class TestMakeReceipt(TestCase):
     self.assertEqual(Receipt([PricedItem('soap', 150),
                               PricedItem('shampoo', 200),
                               PricedItem('toothpaste', 80)],
+                             0,
                              430),
                      make_receipt(basket, self.prices))
 
@@ -30,6 +31,7 @@ class TestMakeReceipt(TestCase):
               'shampoo']
     receipt = make_receipt(basket, self.prices, [three_for_two('shampoo')])
     self.assertEqual(1180, receipt.total)
+    self.assertEqual(200, receipt.saving)
     self.assertEqual(sorted([PricedItem('soap', 150),
                              PricedItem('shampoo', 200),
                              PricedItem('shampoo', 200),
@@ -67,3 +69,4 @@ class TestMakeReceipt(TestCase):
                                       200, 400)]),
                      sorted(receipt.items))
     self.assertEqual(1080, receipt.total)
+    self.assertEqual(300, receipt.saving)

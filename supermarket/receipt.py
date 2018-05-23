@@ -2,7 +2,8 @@ from collections import namedtuple
 from functools import reduce
 from .item import PricedItem, PricedWeighedItem
 
-Receipt = namedtuple('Receipt', 'items total')
+Receipt = namedtuple('Receipt', 'items saving total')
+"""A receipt as a list of item and a total"""
 
 def price_items(basket, prices):
   return [price_item(item, prices) for item in basket]
@@ -21,4 +22,5 @@ def make_receipt(basket, prices, rules=[]):
                                   (priced, []))
   all_items = full_price + discounted
   total = sum(map(lambda priced_item: priced_item.price, all_items))
-  return Receipt(all_items, total)
+  saving = sum(map(lambda item: item.saving, discounted))
+  return Receipt(all_items, saving, total)
