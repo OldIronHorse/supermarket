@@ -23,6 +23,21 @@ def do_spend_x_on_y_get_zpc_off(eligible_item_names, required_spend, discount,
                           eligible_spend * (1 - discount))])
 
 def freebies(paid_item_name, paid_item_count, free_item_name, free_item_count):
+  """Factory function for "buy X of item A get Y of item B free rule
+    You only get the freebies if they are in the basket, they are not added 
+    automatically. It returns a function that implements the rule with the 
+    supplied parameters.
+
+  Args:
+    paid_item_name (str): the name of the eligilbe item, A
+    paid_item_count (int): the number of items A required to get a freebie, X
+    freee_item_name (str): the name of the (potentially) free item, B
+    free_item_count (int): the number of free items to be granted, Y
+
+  Returns:
+    fn(full_price_items, discounted_items): a function that will apply the 
+      freebies rule to a list of priced items and return a tuple of 
+      (full_priced_items, discounted_items)"""
   return partial(do_freebies, paid_item_name, paid_item_count, free_item_name,
                  free_item_count)
 
